@@ -53,10 +53,10 @@ blueprint:
         action: {}
 
 
-trigger:
-  - platform: time_pattern
+triggers:
+  - trigger: time_pattern
     seconds: !input update_teamtracker_sensor
-  - platform: state
+  - trigger: state
     entity_id: !input team_sensor
 
 condition:
