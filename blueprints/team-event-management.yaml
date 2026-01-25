@@ -1,15 +1,16 @@
 # Modified from https://github.com/ClaymoreTech4/HABlueprints-Team-Tracker/blob/main/teamtrackerblueprint.yaml
-
 blueprint:
   name: Team Event Management
   description: >
     Manages team score updates, and game state events. Allows adding additional actions after key events.
+
   domain: automation
   input:
     team_sensor:
       name: Team Sensor
       description: >
         The sensor entity tracking the team's state and score (e.g., sensor.mariners_baseball).
+
       selector:
         entity:
           integration: teamtracker
@@ -18,6 +19,7 @@ blueprint:
       name: Event Input Text
       description: >
         An input_select entity for displaying the game event type (e.g., Touchdown, Extra Point). This can be used for dashboards and conditionals, for example.
+
       selector:
         entity:
           domain: input_text
@@ -34,6 +36,7 @@ blueprint:
       name: Game Starts Actions
       description: >
         A sequence of actions to perform after game starts.
+
       default: []
       selector:
         action: {}
@@ -41,6 +44,7 @@ blueprint:
       name: Game Ends Actions
       description: >
         A sequence of actions to perform after game ends.
+
       default: []
       selector:
         action: {}
@@ -48,45 +52,40 @@ blueprint:
       name: Team Score Actions
       description: >
         A sequence of actions to perform after the team scores.
+
       default: []
       selector:
         action: {}
-
-
 triggers:
   - trigger: state
     entity_id: !input team_sensor
-
 condition:
   - condition: state
     entity_id: !input team_sensor
     state: "IN"
-
-
 action:
   - parallel:
-
       - sequence:
           - delay: !input update_teamtracker_sensor
           - action: homeassistant.reload_config_entry
             target:
               entity_id: !input team_sensor
             data: {}
-
       - choose:
           # Detect state change events
           - conditions:
               - condition: template
                 value_template: >
                   {{ trigger.to_state.state != trigger.from_state.state }}
+
             sequence:
               - choose:
-
+                  # Game Starting
                   - conditions:
-                      # Game Starting
                       - condition: template
                         value_template: >
                           {{ trigger.to_state.state == "IN" and trigger.from_state.state == "PRE" }}
+
                     sequence:
                       - parallel:
                           - sequence:
@@ -102,13 +101,12 @@ action:
                                 data:
                                   option: None
                           - sequence: !input game_start_actions
-                    
+                  # Team Scored
                   - conditions:
-                      # Team Scored
                       - condition: template
                         value_template: >
-                          {{ (trigger.to_state.attributes.team_score | int) - 
-                          (trigger.from_state.attributes.team_score | int) >= 1 }}
+                          {{ (trigger.to_state.attributes.team_score | int) -  (trigger.from_state.attributes.team_score | int) >= 1 }}
+
                     sequence:
                       - parallel:
                           - sequence:
@@ -124,12 +122,12 @@ action:
                                 data:
                                   option: None
                           - sequence: !input team_scored_actions
-
+                  # Game Ending
                   - conditions:
-                      # Game Ending
                       - condition: template
                         value_template: >
                           {{ trigger.to_state.state == "POST" and trigger.from_state.state == "IN" }}
+
                     sequence:
                       - parallel:
                           - sequence:
@@ -145,7 +143,4 @@ action:
                                 data:
                                   option: None
                           - sequence: !input game_end_actions
-
-
-
 mode: parallel
