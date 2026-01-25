@@ -1,0 +1,153 @@
+# Modified from https://github.com/ClaymoreTech4/HABlueprints-Team-Tracker/blob/main/teamtrackerblueprint.yaml
+
+blueprint:
+  name: Team Event Management
+  description: >
+    Manages team score updates, and game state events. Allows adding additional actions after key events.
+  domain: automation
+  input:
+    team_sensor:
+      name: Team Sensor
+      description: >
+        The sensor entity tracking the team's state and score (e.g., sensor.mariners_baseball).
+      selector:
+        entity:
+          integration: teamtracker
+          multiple: false
+    event_input_text:
+      name: Event Input Text
+      description: >
+        An input_select entity for displaying the game event type (e.g., Touchdown, Extra Point). This can be used for dashboards and conditionals, for example.
+      selector:
+        entity:
+          domain: input_text
+    update_teamtracker_sensor:
+      name: Sensor Update Rate
+      description: This sets how often the Team Tracker Sensor should update, when the game is playing (State = "IN") Every 10 to 59 seconds
+      default: 30
+      selector:
+        number:
+          min: 10
+          max: 59
+          mode: box
+    game_start_actions:
+      name: Game Starts Actions
+      description: >
+        A sequence of actions to perform after game starts.
+      default: []
+      selector:
+        action: {}
+    game_end_actions:
+      name: Game Ends Actions
+      description: >
+        A sequence of actions to perform after game ends.
+      default: []
+      selector:
+        action: {}
+    team_scored_actions:
+      name: Team Score Actions
+      description: >
+        A sequence of actions to perform after the team scores.
+      default: []
+      selector:
+        action: {}
+
+
+trigger:
+  - platform: time_pattern
+    seconds: !input update_teamtracker_sensor
+  - platform: state
+    entity_id: !input team_sensor
+
+condition:
+  - condition: state
+    entity_id: !input team_sensor
+    state: "IN"
+
+
+action:
+  - parallel:
+
+      - sequence:
+          - delay: !input update_teamtracker_sensor
+          - action: homeassistant.reload_config_entry
+            target:
+              entity_id: !input team_sensor
+            data: {}
+
+      - choose:
+          # Detect state change events
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.to_state.state != trigger.from_state.state }}
+            sequence:
+              - choose:
+
+                  - conditions:
+                      # Game Starting
+                      - condition: template
+                        value_template: >
+                          {{ trigger.to_state.state == "IN" and trigger.from_state.state == "PRE" }}
+                    sequence:
+                      - parallel:
+                          - sequence:
+                              - service: input_text.set_value
+                                target:
+                                  entity_id: !input event_input_text
+                                data:
+                                  option: Game Starting
+                              - delay: "00:00:30"
+                              - service: input_text.set_value
+                                target:
+                                  entity_id: !input event_input_text
+                                data:
+                                  option: None
+                          - sequence: !input game_start_actions
+                    
+                  - conditions:
+                      # Team Scored
+                      - condition: template
+                        value_template: >
+                          {{ (trigger.to_state.attributes.team_score | int) - 
+                          (trigger.from_state.attributes.team_score | int) >= 1 }}
+                    sequence:
+                      - parallel:
+                          - sequence:
+                              - service: input_text.set_value
+                                target:
+                                  entity_id: !input event_input_text
+                                data:
+                                  option: Team Scored
+                              - delay: "00:00:30"
+                              - service: input_text.set_value
+                                target:
+                                  entity_id: !input event_input_text
+                                data:
+                                  option: None
+                          - sequence: !input team_scored_actions
+
+                  - conditions:
+                      # Game Ending
+                      - condition: template
+                        value_template: >
+                          {{ trigger.to_state.state == "POST" and trigger.from_state.state == "IN" }}
+                    sequence:
+                      - parallel:
+                          - sequence:
+                              - service: input_text.set_value
+                                target:
+                                  entity_id: !input event_input_text
+                                data:
+                                  option: Game Ending
+                              - delay: "00:00:30"
+                              - service: input_text.set_value
+                                target:
+                                  entity_id: !input event_input_text
+                                data:
+                                  option: None
+                          - sequence: !input game_end_actions
+
+
+
+mode: parallel
