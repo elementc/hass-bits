@@ -5,6 +5,8 @@ blueprint:
     Manages team score updates, and game state events. Allows adding additional actions after key events.
 
   domain: automation
+  variables:
+    team_last_score_val: 0
   input:
     team_sensor:
       name: Team Sensor
@@ -105,11 +107,13 @@ action:
                   - conditions:
                       - condition: template
                         value_template: >
-                          {{ ( state_attr(trigger.to_state, 'team_score') | int) -  ( state_attr(trigger.from_state, 'team_score') | int) >= 1 }}
+                          {{ (state_attr(trigger.to_state, 'team_score') | int) != (team_last_score_val | int) }}
 
                     sequence:
                       - parallel:
                           - sequence:
+                              - variables:
+                                  team_last_score_val: "{{state_attr(trigger.to_state, 'team_score')}}"
                               - service: input_text.set_value
                                 target:
                                   entity_id: !input event_input_text
