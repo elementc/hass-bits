@@ -105,7 +105,7 @@ action:
                   - conditions:
                       - condition: template
                         value_template: >
-                          {{ (trigger.to_state.attributes.team_score | int) -  (trigger.from_state.attributes.team_score | int) >= 1 }}
+                          {{ ( state_attr(trigger.to_state, 'team_score') | int) -  ( state_attr(trigger.from_state, 'team_score') | int) >= 1 }}
 
                     sequence:
                       - parallel:
