@@ -54,8 +54,6 @@ blueprint:
 
 
 triggers:
-  - trigger: time_pattern
-    seconds: !input update_teamtracker_sensor
   - trigger: state
     entity_id: !input team_sensor
 
