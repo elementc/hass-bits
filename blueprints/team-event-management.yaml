@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V1
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V2
 
   domain: automation
   input:
