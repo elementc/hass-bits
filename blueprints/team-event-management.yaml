@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V5
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V6
 
   domain: automation
   input:
@@ -91,13 +91,13 @@ action:
                         target:
                           entity_id: !input event_input_text
                         data:
-                          option: Game Starting
+                          value: Game Starting
                       - delay: "00:00:30"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
                         data:
-                          option: None
+                          value: None
                   - sequence: !input game_start_actions
           # Team Scored
           - conditions:
@@ -114,13 +114,13 @@ action:
                         target:
                           entity_id: !input event_input_text
                         data:
-                          option: Team Scored
+                          value: Team Scored
                       - delay: "00:00:30"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
                         data:
-                          option: None
+                          value: None
                   - sequence: !input team_scored_actions
           # Game Ending
           - conditions:
@@ -135,12 +135,12 @@ action:
                         target:
                           entity_id: !input event_input_text
                         data:
-                          option: Game Ending
+                          value: Game Ending
                       - delay: "00:00:30"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
                         data:
-                          option: None
+                          value: None
                   - sequence: !input game_end_actions
 mode: parallel
