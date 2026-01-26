@@ -78,11 +78,9 @@ action:
                 data: {}
       # Detect state change events.
       - if:
-          - conditions:
-              - condition: template
-                value_template: >
-                  {{ trigger.to_state.state != trigger.from_state.state }}
-
+          - condition: template
+            value_template: >
+              {{ trigger.to_state.state != trigger.from_state.state }}
         then:
           - choose:
               # Game Starting
