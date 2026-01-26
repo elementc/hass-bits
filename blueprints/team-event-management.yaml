@@ -5,8 +5,6 @@ blueprint:
     Manages team score updates, and game state events. Allows adding additional actions after key events. V1
 
   domain: automation
-  variables:
-    team_last_score_val: 0
   input:
     team_sensor:
       name: Team Sensor
@@ -58,6 +56,8 @@ blueprint:
       default: []
       selector:
         action: {}
+variables:
+  team_last_score_val: 0
 triggers:
   - trigger: state
     entity_id: !input team_sensor
