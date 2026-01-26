@@ -76,76 +76,70 @@ action:
                 target:
                   entity_id: !input team_sensor
                 data: {}
-      # Detect state change events.
-      - if:
-          - condition: template
-            value_template: >
-              {{ trigger.to_state.state != trigger.from_state.state }}
-        then:
-          - choose:
-              # Game Starting
-              - conditions:
-                  - condition: template
-                    value_template: >
-                      {{ trigger.to_state.state == "IN" and trigger.from_state.state == "PRE" }}
+      - choose:
+          # Game Starting
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.to_state.state == "IN" and trigger.from_state.state == "PRE" }}
 
-                sequence:
-                  - parallel:
-                      - sequence:
-                          - service: input_text.set_value
-                            target:
-                              entity_id: !input event_input_text
-                            data:
-                              option: Game Starting
-                          - delay: "00:00:30"
-                          - service: input_text.set_value
-                            target:
-                              entity_id: !input event_input_text
-                            data:
-                              option: None
-                      - sequence: !input game_start_actions
-              # Team Scored
-              - conditions:
-                  - condition: template
-                    value_template: >
-                      {{ (state_attr(trigger.to_state, 'team_score') | int) != (team_last_score_val | int) }}
+            sequence:
+              - parallel:
+                  - sequence:
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          option: Game Starting
+                      - delay: "00:00:30"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          option: None
+                  - sequence: !input game_start_actions
+          # Team Scored
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ (state_attr(trigger.to_state, 'team_score') | int) != (team_last_score_val | int) }}
 
-                sequence:
-                  - parallel:
-                      - sequence:
-                          - variables:
-                              team_last_score_val: "{{state_attr(trigger.to_state, 'team_score')}}"
-                          - service: input_text.set_value
-                            target:
-                              entity_id: !input event_input_text
-                            data:
-                              option: Team Scored
-                          - delay: "00:00:30"
-                          - service: input_text.set_value
-                            target:
-                              entity_id: !input event_input_text
-                            data:
-                              option: None
-                      - sequence: !input team_scored_actions
-              # Game Ending
-              - conditions:
-                  - condition: template
-                    value_template: >
-                      {{ trigger.to_state.state == "POST" and trigger.from_state.state == "IN" }}
+            sequence:
+              - parallel:
+                  - sequence:
+                      - variables:
+                          team_last_score_val: "{{state_attr(trigger.to_state, 'team_score')}}"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          option: Team Scored
+                      - delay: "00:00:30"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          option: None
+                  - sequence: !input team_scored_actions
+          # Game Ending
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.to_state.state == "POST" and trigger.from_state.state == "IN" }}
 
-                sequence:
-                  - parallel:
-                      - sequence:
-                          - service: input_text.set_value
-                            target:
-                              entity_id: !input event_input_text
-                            data:
-                              option: Game Ending
-                          - delay: "00:00:30"
-                          - service: input_text.set_value
-                            target:
-                              entity_id: !input event_input_text
-                            data:
-                              option: None
-                      - sequence: !input game_end_actions
+            sequence:
+              - parallel:
+                  - sequence:
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          option: Game Ending
+                      - delay: "00:00:30"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          option: None
+                  - sequence: !input game_end_actions
 mode: parallel
