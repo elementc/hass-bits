@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V6
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V7
 
   domain: automation
   input:
@@ -16,13 +16,21 @@ blueprint:
           integration: teamtracker
           multiple: false
     event_input_text:
-      name: Event Input Text
+      name: Event Type input_text
       description: >
-        An input_select entity for displaying the game event type (e.g., Touchdown, Extra Point). This can be used for dashboards and conditionals, for example.
+        An input_text entity for displaying the game event type (e.g., Touchdown, Extra Point). This can be used for dashboards and conditionals, for example.
 
       selector:
         entity:
           domain: input_text
+    team_score_counter:
+      name: Team Score Counter
+      description: >
+        A counter entity, which will statefully store the team's score during the game.
+
+      selector:
+        entity:
+          domain: counter
     update_teamtracker_sensor:
       name: Sensor Update Rate
       description: This sets how often the Team Tracker Sensor should update, when the game is playing (State = "IN") Every 10 to 59 seconds
@@ -57,7 +65,6 @@ blueprint:
       selector:
         action: {}
 variables:
-  team_last_score_val: 0
   game_state: !input team_sensor
 triggers:
   - trigger: state
@@ -108,8 +115,9 @@ action:
             sequence:
               - parallel:
                   - sequence:
-                      - variables:
-                          team_last_score_val: "{{state_attr(game_state, 'team_score')}}"
+                      - action: counter.set_value
+                        target: !input team_score_counter
+                        value: "{{state_attr(game_state, 'team_score') | int}}"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
