@@ -118,7 +118,8 @@ action:
                       - action: counter.set_value
                         target:
                           entity_id: !input team_score_counter
-                        value: "{{state_attr(game_state, 'team_score') | int}}"
+                        data:
+                          value: "{{state_attr(game_state, 'team_score') | int}}"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
