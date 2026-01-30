@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V10
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V11
 
   domain: automation
   input:
@@ -27,6 +27,14 @@ blueprint:
       name: Team Score Counter
       description: >
         A counter entity, which will statefully store the team's score during the game.
+
+      selector:
+        entity:
+          domain: counter
+    opp_score_counter:
+      name: Opponent Score Counter
+      description: >
+        A counter entity, which will statefully store the opponent's score during the game.
 
       selector:
         entity:
@@ -67,7 +75,23 @@ blueprint:
     team_score_overturned_actions:
       name: Team Score Overturned Actions
       description: >
-        A sequence of actions to perform after the team score is reduced.
+        A sequence of actions to perform after the team score is reduced.  Note, only detected if scoreboard holds the overturned value for some time.
+
+      default: []
+      selector:
+        action: {}
+    opp_scored_actions:
+      name: Opponent Score Actions
+      description: >
+        A sequence of actions to perform after the opponent scores.
+
+      default: []
+      selector:
+        action: {}
+    opp_score_overturned_actions:
+      name: Opponent Score Overturned Actions
+      description: >
+        A sequence of actions to perform after the opponent score is reduced. Note, only detected if scoreboard holds the overturned value for some time.
 
       default: []
       selector:
@@ -75,6 +99,7 @@ blueprint:
 variables:
   game_state: !input team_sensor
   us_score_prev: !input team_score_counter
+  them_score_prev: !input
 triggers:
   - trigger: state
     entity_id: !input team_sensor
@@ -115,6 +140,9 @@ action:
                         data:
                           value: None
                   - sequence: !input game_start_actions
+
+
+
           # Team Scored
           - conditions:
               - condition: template
@@ -127,7 +155,7 @@ action:
                         target:
                           entity_id: !input team_score_counter
                         data:
-                          value: "{{state_attr(game_state, 'team_score') | int}}"
+                          value: "{{state_attr(game_state, 'team_score') | int(0)}}"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
@@ -152,7 +180,7 @@ action:
                         target:
                           entity_id: !input team_score_counter
                         data:
-                          value: "{{state_attr(game_state, 'team_score') | int}}"
+                          value: "{{state_attr(game_state, 'team_score') | int(0) }}"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
@@ -165,6 +193,61 @@ action:
                         data:
                           value: None
                   - sequence: !input team_score_overturned_actions
+
+
+          # Opponent Scored
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'opponent_score') | int(0) > states(them_score_prev) | int(0) ) }}
+            sequence:
+              - parallel:
+                  - sequence:
+                      - action: counter.set_value
+                        target:
+                          entity_id: !input opp_score_counter
+                        data:
+                          value: "{{state_attr(game_state, 'opponent_score') | int(0)}}"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          value: Opponent Scored
+                      - delay: "00:00:30"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          value: None
+                  - sequence: !input opp_scored_actions
+          # Opponent Score Clawed Back
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'opponent_score') | int(0) < states(them_score_prev) | int(0) ) }}
+            sequence:
+              - parallel:
+                  - sequence:
+                      - action: counter.set_value
+                        target:
+                          entity_id: !input opp_score_counter
+                        data:
+                          value: "{{state_attr(game_state, 'opponent_score') | int(0) }}"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          value: Opponent Score Overturned
+                      - delay: "00:00:30"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          value: None
+                  - sequence: !input opp_score_overturned_actions
+
+
+
           # Game Ending
           - conditions:
               - condition: template
