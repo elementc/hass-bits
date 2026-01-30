@@ -64,6 +64,14 @@ blueprint:
       default: []
       selector:
         action: {}
+    team_score_overturned_actions:
+      name: Team Score Overturned Actions
+      description: >
+        A sequence of actions to perform after the team score is reduced.
+
+      default: []
+      selector:
+        action: {}
 variables:
   game_state: !input team_sensor
   us_score_prev: !input team_score_counter
@@ -111,7 +119,7 @@ action:
           - conditions:
               - condition: template
                 value_template: >
-                  {{state_attr(game_state, 'team_score') > states(us_score_prev) }}
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'team_score') | int(0) > states(us_score_prev) | int(0) ) }}
             sequence:
               - parallel:
                   - sequence:
@@ -132,6 +140,31 @@ action:
                         data:
                           value: None
                   - sequence: !input team_scored_actions
+          # Team Score Clawed Back
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'team_score') | int(0) < states(us_score_prev) | int(0) ) }}
+            sequence:
+              - parallel:
+                  - sequence:
+                      - action: counter.set_value
+                        target:
+                          entity_id: !input team_score_counter
+                        data:
+                          value: "{{state_attr(game_state, 'team_score') | int}}"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          value: Team Score Overturned
+                      - delay: "00:00:30"
+                      - service: input_text.set_value
+                        target:
+                          entity_id: !input event_input_text
+                        data:
+                          value: None
+                  - sequence: !input team_score_overturned_actions
           # Game Ending
           - conditions:
               - condition: template
