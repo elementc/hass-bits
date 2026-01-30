@@ -99,7 +99,7 @@ blueprint:
 variables:
   game_state: !input team_sensor
   us_score_prev: !input team_score_counter
-  them_score_prev: !input
+  them_score_prev: !input opp_score_counter
 triggers:
   - trigger: state
     entity_id: !input team_sensor
