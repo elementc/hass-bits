@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V12
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V13
 
   domain: automation
   input:
@@ -127,6 +127,16 @@ action:
 
             sequence:
               - parallel:
+                  - action: counter.set_value
+                    target:
+                      entity_id: !input team_score_counter
+                    data:
+                      value: 0
+                  - action: counter.set_value
+                    target:
+                      entity_id: !input opp_score_counter
+                    data:
+                      value: 0
                   - sequence:
                       - service: input_text.set_value
                         target:
