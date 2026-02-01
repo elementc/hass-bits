@@ -279,6 +279,7 @@ action:
                           value: None
                   - sequence: !input opp_score_overturned_actions
           # Game Ending
+          # TODO: this didn't fire for me on a kraken match
           - conditions:
               - condition: template
                 value_template: >
@@ -302,7 +303,7 @@ action:
                   - if:
                       - condition: template
                         value_template: >
-                          {{ state_attr(game_state, 'team_winner') | bool(False) }}
+                          {{ state_attr(game_state, 'team_winner') | bool(False) }} 
 
                     then:
                       # Team Wins
