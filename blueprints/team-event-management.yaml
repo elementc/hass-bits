@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V14
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V15
 
   domain: automation
   input:
@@ -178,7 +178,7 @@ action:
           - conditions:
               - condition: template
                 value_template: >
-                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'team_score') | int(0) > states(us_score_prev) | int(0) ) }}
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'team_score') | int(-255) > states(us_score_prev) | int(255) ) }}
 
             sequence:
               - parallel:
@@ -187,7 +187,7 @@ action:
                         target:
                           entity_id: !input team_score_counter
                         data:
-                          value: "{{state_attr(game_state, 'team_score') | int(0)}}"
+                          value: "{{state_attr(game_state, 'team_score') | int(-255)}}"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
@@ -204,7 +204,7 @@ action:
           - conditions:
               - condition: template
                 value_template: >
-                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'team_score') | int(0) < states(us_score_prev) | int(0) ) }}
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'team_score') | int(255) < states(us_score_prev) | int(-255) ) }}
 
             sequence:
               - parallel:
@@ -213,7 +213,7 @@ action:
                         target:
                           entity_id: !input team_score_counter
                         data:
-                          value: "{{state_attr(game_state, 'team_score') | int(0) }}"
+                          value: "{{state_attr(game_state, 'team_score') | int(255) }}"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
@@ -230,7 +230,7 @@ action:
           - conditions:
               - condition: template
                 value_template: >
-                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'opponent_score') | int(0) > states(them_score_prev) | int(0) ) }}
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'opponent_score') | int(-255) > states(them_score_prev) | int(255)) ) }}
 
             sequence:
               - parallel:
@@ -239,7 +239,7 @@ action:
                         target:
                           entity_id: !input opp_score_counter
                         data:
-                          value: "{{state_attr(game_state, 'opponent_score') | int(0)}}"
+                          value: "{{state_attr(game_state, 'opponent_score') | int(-255)}}"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
@@ -256,7 +256,7 @@ action:
           - conditions:
               - condition: template
                 value_template: >
-                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'opponent_score') | int(0) < states(them_score_prev) | int(0) ) }}
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'opponent_score') | int(255) < states(them_score_prev) | int(-255) ) }}
 
             sequence:
               - parallel:
@@ -265,7 +265,7 @@ action:
                         target:
                           entity_id: !input opp_score_counter
                         data:
-                          value: "{{state_attr(game_state, 'opponent_score') | int(0) }}"
+                          value: "{{state_attr(game_state, 'opponent_score') | int(255) }}"
                       - service: input_text.set_value
                         target:
                           entity_id: !input event_input_text
