@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V15
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V16
 
   domain: automation
   input:
@@ -230,7 +230,7 @@ action:
           - conditions:
               - condition: template
                 value_template: >
-                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'opponent_score') | int(-255) > states(them_score_prev) | int(255)) ) }}
+                  {{ trigger.to_state.state == "IN" and ( state_attr(game_state, 'opponent_score') | int(-255) > states(them_score_prev) | int(255) ) }}
 
             sequence:
               - parallel:
