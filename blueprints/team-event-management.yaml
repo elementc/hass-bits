@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V16
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V17
 
   domain: automation
   input:
@@ -23,6 +23,13 @@ blueprint:
       selector:
         entity:
           domain: input_text
+    game_active_bool:
+      name: Game Currently Running input_bool
+      description: >
+        An input_bool which will statefully capture whether a game for this team is currently being played.
+      selector:
+        entity:
+          domain: input_bool
     team_score_counter:
       name: Team Score Counter
       description: >
@@ -122,6 +129,7 @@ blueprint:
         action: {}
 variables:
   game_state: !input team_sensor
+  game_active: !input game_active_bool
   us_score_prev: !input team_score_counter
   them_score_prev: !input opp_score_counter
 triggers:
@@ -147,7 +155,7 @@ action:
           - conditions:
               - condition: template
                 value_template: >
-                  {{ trigger.to_state.state == "IN" and trigger.from_state.state == "PRE" }}
+                  {{ trigger.to_state.state == "IN" and states(game_active) == "off" }}
 
             sequence:
               - parallel:
@@ -161,6 +169,9 @@ action:
                       entity_id: !input opp_score_counter
                     data:
                       value: 0
+                  - action: input_boolean.turn_on
+                    target:
+                      entity_id: !input game_active_bool
                   - sequence:
                       - service: input_text.set_value
                         target:
@@ -279,14 +290,16 @@ action:
                           value: None
                   - sequence: !input opp_score_overturned_actions
           # Game Ending
-          # TODO: this didn't fire for me on a kraken match
           - conditions:
               - condition: template
                 value_template: >
-                  {{ trigger.to_state.state == "POST" and trigger.from_state.state == "IN" }}
+                  {{ trigger.to_state.state == "POST" and states(game_active) == "on" }}
 
             sequence:
               - parallel:
+                  - action: input_boolean.turn_off
+                    target:
+                      entity_id: !input game_active_bool
                   - sequence:
                       - service: input_text.set_value
                         target:
