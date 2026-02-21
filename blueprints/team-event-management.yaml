@@ -2,7 +2,7 @@
 blueprint:
   name: Team Event Management
   description: >
-    Manages team score updates, and game state events. Allows adding additional actions after key events. V18
+    Manages team score updates, and game state events. Allows adding additional actions after key events. V19
 
   domain: automation
   input:
@@ -338,3 +338,4 @@ action:
                       # Game Draw
                       - sequence: !input team_draw_actions
 mode: parallel
+max_exceeded: silent
