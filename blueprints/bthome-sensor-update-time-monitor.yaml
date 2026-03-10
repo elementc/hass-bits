@@ -1,0 +1,49 @@
+blueprint:
+  name: BTHome Temperature Sensor Update Time Tracker
+  description: >
+    Tracks the last time the temperature changes, to allow for staleness monitoring. V1
+
+  domain: automation
+  input:
+    temp_sensor:
+      name: Temperature Sensor To Track
+      description: >
+        The BTHome Temperature Sensor that you wish to monitor last update time of.
+      selector:
+        device:
+          filter:
+            - integration: bthome
+    date_input:
+      name: Date/Time Input To Sync
+      description: >
+        An input_datetime entity to record last time of temperature change.
+
+      selector:
+        entity:
+          domain: input_datetime
+
+triggers:
+  - type: temperature
+    entity_id: !input temp_sensor
+    domain: sensor
+    trigger: device
+    below: 99999
+  - type: humidity
+    entity_id: !input temp_sensor
+    domain: sensor
+    trigger: device
+    below: 200
+  - type: battery_level
+    entity_id: !input temp_sensor
+    domain: sensor
+    trigger: device
+    below: 200
+actions:
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: !input date_input
+    data:
+      timestamp: "{{ now().timestamp() }}"
+
+mode: single
+max_exceeded: silent
