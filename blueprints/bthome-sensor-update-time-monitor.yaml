@@ -1,7 +1,7 @@
 blueprint:
   name: BTHome Temperature Sensor Update Time Tracker
   description: >
-    Tracks the last time the temperature changes, to allow for staleness monitoring. V3
+    Tracks the last time the temperature changes, to allow for staleness monitoring. V4
 
   domain: automation
   input:
@@ -13,7 +13,7 @@ blueprint:
         entity:
           filter:
             - integration: bthome
-            - device_class: temperature
+              device_class: temperature
     date_input:
       name: Date/Time Input To Sync
       description: >
